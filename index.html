@@ -312,50 +312,53 @@ function applyTheme(){const dark=localStorage.getItem('personal-dashboard-theme'
 function getSyncConfig(){try{return JSON.parse(localStorage.getItem('personal-dashboard-sync')||'null')}catch(e){return null}}
 function setSyncConfig(cfg){localStorage.setItem('personal-dashboard-sync',JSON.stringify(cfg))}
 function setSyncStatus(msg){const el=document.getElementById('syncStatus');if(el)el.textContent=msg}
-function keyHeaders(key,extra){return {...(extra||{}),'X-Master-Key':key,'X-Access-Key':key}}
+const GIST_FILENAME='personal-dashboard-data.json';
+function ghHeaders(token,extra){return {...(extra||{}),'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}}
 function timeAgo(ts){if(!ts)return 'never';const s=Math.floor((Date.now()-ts)/1000);if(s<60)return 'just now';const m=Math.floor(s/60);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
 async function syncRequest(url,opts){
   const res=await fetch(url,opts);
-  if(!res.ok){const t=await res.text().catch(()=>'');throw new Error(`${res.status} ${t.slice(0,140)}`)}
+  if(!res.ok){const t=await res.text().catch(()=>'');throw new Error(`${res.status} ${t.slice(0,180)}`)}
   return res.json();
 }
+function gistFileContent(json){const f=json&&json.files&&json.files[GIST_FILENAME];return f?f.content:null}
 async function syncCreateBin(){
-  const key=document.getElementById('syncApiKey')?.value.trim();
-  if(!key){alert('Paste your JSONBin.io API key first.');return}
+  const token=document.getElementById('syncApiKey')?.value.trim();
+  if(!token){alert('Paste your GitHub personal access token first.');return}
   setSyncStatus('Creating your cloud save…');
   try{
-    const json=await syncRequest('https://api.jsonbin.io/v3/b',{method:'POST',headers:keyHeaders(key,{'Content-Type':'application/json','X-Bin-Name':'personal-dashboard'}),body:JSON.stringify(data)});
-    const binId=json && json.metadata && json.metadata.id;
-    if(!binId) throw new Error('No bin id returned');
-    setSyncConfig({apiKey:key,binId,lastSyncedSnapshot:JSON.stringify(data),lastSyncedAt:Date.now(),autoPush:false});
+    const json=await syncRequest('https://api.github.com/gists',{method:'POST',headers:ghHeaders(token,{'Content-Type':'application/json'}),body:JSON.stringify({description:'Personal Dashboard data (do not rename the file)',public:false,files:{[GIST_FILENAME]:{content:JSON.stringify(data,null,2)}}})});
+    const gistId=json&&json.id;
+    if(!gistId) throw new Error('No gist id returned');
+    setSyncConfig({apiKey:token,binId:gistId,lastSyncedSnapshot:JSON.stringify(data),lastSyncedAt:Date.now(),autoPush:false});
     render();
   }catch(err){alert('Could not create a cloud save: '+err.message);render()}
 }
 async function syncLinkExisting(){
-  const key=document.getElementById('syncApiKeyLink')?.value.trim();
-  const binId=document.getElementById('syncBinId')?.value.trim();
-  if(!key||!binId){alert('Enter both the API key and the Bin ID from your other device.');return}
+  const token=document.getElementById('syncApiKeyLink')?.value.trim();
+  const gistId=document.getElementById('syncBinId')?.value.trim();
+  if(!token||!gistId){alert('Enter both the token and the Gist ID from your other device.');return}
   try{
-    await syncRequest(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:keyHeaders(key)});
-    setSyncConfig({apiKey:key,binId,lastSyncedSnapshot:null,lastSyncedAt:null,autoPush:false});
-    if(confirm('Linked! Pull the saved data from that bin now? This will replace what is on this device.')){await syncPull()}else{render()}
-  }catch(err){alert('Could not link to that bin: '+err.message)}
+    const json=await syncRequest(`https://api.github.com/gists/${gistId}`,{headers:ghHeaders(token)});
+    if(gistFileContent(json)===null) throw new Error(`Gist doesn't contain a ${GIST_FILENAME} file`);
+    setSyncConfig({apiKey:token,binId:gistId,lastSyncedSnapshot:null,lastSyncedAt:null,autoPush:false});
+    if(confirm('Linked! Pull the saved data from that gist now? This will replace what is on this device.')){await syncPull()}else{render()}
+  }catch(err){alert('Could not link to that gist: '+err.message)}
 }
 async function syncPush(force){
   const cfg=getSyncConfig();if(!cfg)return;
   try{
     if(!force){
       setSyncStatus('Checking for conflicts…');
-      const remoteJson=await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:keyHeaders(cfg.apiKey)});
-      const remoteStr=JSON.stringify(remoteJson.record||{});
-      if(cfg.lastSyncedSnapshot && remoteStr!==cfg.lastSyncedSnapshot){
+      const remoteJson=await syncRequest(`https://api.github.com/gists/${cfg.binId}`,{headers:ghHeaders(cfg.apiKey)});
+      const remoteStr=gistFileContent(remoteJson);
+      if(cfg.lastSyncedSnapshot && remoteStr!==null && JSON.stringify(JSON.parse(remoteStr))!==cfg.lastSyncedSnapshot){
         setSyncStatus('');
         const pullInstead=confirm("The cloud has changes from another device this device hasn't pulled yet.\n\nClick OK to pull those changes first (recommended), or Cancel to push anyway and overwrite them.");
         if(pullInstead){ await syncPull(); return; }
       }
     }
     setSyncStatus('Pushing…');
-    await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{method:'PUT',headers:keyHeaders(cfg.apiKey,{'Content-Type':'application/json'}),body:JSON.stringify(data)});
+    await syncRequest(`https://api.github.com/gists/${cfg.binId}`,{method:'PATCH',headers:ghHeaders(cfg.apiKey,{'Content-Type':'application/json'}),body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(data,null,2)}}})});
     setSyncConfig({...getSyncConfig(),lastSyncedSnapshot:JSON.stringify(data),lastSyncedAt:Date.now()});
     setSyncStatus('Pushed ✓ '+new Date().toLocaleTimeString());
     render();
@@ -364,13 +367,13 @@ async function syncPush(force){
 async function autoPushCheck(){
   const cfg=getSyncConfig();if(!cfg||!cfg.autoPush)return;
   try{
-    const remoteJson=await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:keyHeaders(cfg.apiKey)});
-    const remoteStr=JSON.stringify(remoteJson.record||{});
-    if(cfg.lastSyncedSnapshot && remoteStr!==cfg.lastSyncedSnapshot){
+    const remoteJson=await syncRequest(`https://api.github.com/gists/${cfg.binId}`,{headers:ghHeaders(cfg.apiKey)});
+    const remoteStr=gistFileContent(remoteJson);
+    if(cfg.lastSyncedSnapshot && remoteStr!==null && JSON.stringify(JSON.parse(remoteStr))!==cfg.lastSyncedSnapshot){
       setSyncStatus('Auto-push paused — cloud has newer changes. Pull manually to resolve.');
       return;
     }
-    await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{method:'PUT',headers:keyHeaders(cfg.apiKey,{'Content-Type':'application/json'}),body:JSON.stringify(data)});
+    await syncRequest(`https://api.github.com/gists/${cfg.binId}`,{method:'PATCH',headers:ghHeaders(cfg.apiKey,{'Content-Type':'application/json'}),body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(data,null,2)}}})});
     setSyncConfig({...getSyncConfig(),lastSyncedSnapshot:JSON.stringify(data),lastSyncedAt:Date.now()});
     setSyncStatus('Auto-synced ✓ '+new Date().toLocaleTimeString());
   }catch(err){setSyncStatus('Auto-push failed: '+err.message)}
@@ -379,24 +382,24 @@ async function syncPull(){
   const cfg=getSyncConfig();if(!cfg)return;
   setSyncStatus('Pulling…');
   try{
-    const json=await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:keyHeaders(cfg.apiKey)});
-    const remote=json&&json.record;
-    if(remote){
-      data={...structuredClone(defaults),...remote};
-      save();
-      setSyncConfig({...getSyncConfig(),lastSyncedSnapshot:JSON.stringify(remote),lastSyncedAt:Date.now()});
-      render();
-      setSyncStatus('Pulled ✓ '+new Date().toLocaleTimeString());
-    }
+    const json=await syncRequest(`https://api.github.com/gists/${cfg.binId}`,{headers:ghHeaders(cfg.apiKey)});
+    const raw=gistFileContent(json);
+    if(raw===null) throw new Error(`Gist doesn't contain a ${GIST_FILENAME} file`);
+    const remote=JSON.parse(raw);
+    data={...structuredClone(defaults),...remote};
+    save();
+    setSyncConfig({...getSyncConfig(),lastSyncedSnapshot:JSON.stringify(remote),lastSyncedAt:Date.now()});
+    render();
+    setSyncStatus('Pulled ✓ '+new Date().toLocaleTimeString());
   }catch(err){setSyncStatus('Pull failed: '+err.message)}
 }
 function syncUnlink(){localStorage.removeItem('personal-dashboard-sync');render()}
 function renderSyncPanel(){
   const cfg=getSyncConfig();
   if(!cfg){
-    return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 12px">Link this device to the same save as your other devices, using a free <a href="https://jsonbin.io" target="_blank" style="color:var(--blue)">JSONBin.io</a> account.</div><div class="small" style="margin-bottom:8px"><b>First device:</b> sign up free at jsonbin.io → Account → API Keys. Create a scoped <b>Access Key</b> (Read+Update+Create permissions) rather than using your account's Master Key — it limits what a leaked key could do. Paste it below.</div><input id="syncApiKey" class="input" placeholder="Paste your JSONBin.io API key" style="margin-bottom:8px"><button class="btn blue" data-action="syncCreate">Create my cloud save</button><div class="small" style="margin:16px 0 8px"><b>Other devices:</b> use the same API key, plus the Bin ID shown here after setup.</div><input id="syncApiKeyLink" class="input" placeholder="API key" style="margin-bottom:6px"><input id="syncBinId" class="input" placeholder="Bin ID" style="margin-bottom:8px"><button class="ghost" data-action="syncLinkExisting">Link to existing cloud save</button><div id="syncStatus" class="small" style="margin-top:8px"></div>`);
+    return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 12px">Link this device to the same save as your other devices, using a free private <a href="https://gist.github.com" target="_blank" style="color:var(--blue)">GitHub Gist</a> on your own GitHub account.</div><div class="small" style="margin-bottom:8px"><b>First device:</b> github.com → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b> → Generate new token. Check only the <b>gist</b> scope, nothing else. Paste the token below.</div><input id="syncApiKey" class="input" placeholder="Paste your GitHub token" style="margin-bottom:8px"><button class="btn blue" data-action="syncCreate">Create my cloud save</button><div class="small" style="margin:16px 0 8px"><b>Other devices:</b> use the same token, plus the Gist ID shown here after setup.</div><input id="syncApiKeyLink" class="input" placeholder="GitHub token" style="margin-bottom:6px"><input id="syncBinId" class="input" placeholder="Gist ID" style="margin-bottom:8px"><button class="ghost" data-action="syncLinkExisting">Link to existing cloud save</button><div id="syncStatus" class="small" style="margin-top:8px"></div><div class="small" style="margin-top:12px">GitHub allows 5,000 free requests an hour that reset every hour — regular use won't come close. Classic tokens are required because GitHub's newer fine-grained tokens don't support Gists yet.</div>`);
   }
-  return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 4px">This device is linked. Bin ID: <span class="kbd">${esc(cfg.binId)}</span></div><div class="small" style="margin-bottom:10px">Last synced: ${timeAgo(cfg.lastSyncedAt)}</div><div class="row"><button class="btn blue" data-action="syncPush">⬆ Push my data</button><button class="btn teal" data-action="syncPull">⬇ Pull latest</button></div><div class="switch-row" style="margin-top:14px"><div><strong style="font-size:13px">Auto-push</strong><div class="small" style="margin-top:2px">Push changes automatically a few seconds after you make them</div></div><button class="ghost" data-action="toggleAutoPush">${cfg.autoPush?'On':'Off'}</button></div><div class="small" style="margin-top:8px">Auto-push always favors this device's changes — if you edit two devices around the same time, one may need a manual Pull.</div><div class="small" style="margin-top:10px">On another device: Settings → Cloud sync → "Link to existing cloud save" → same API key + this Bin ID.</div><div id="syncStatus" class="small" style="margin-top:8px"></div><button class="ghost" style="margin-top:10px" data-action="syncUnlink">Unlink this device</button>`);
+  return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 4px">This device is linked. Gist ID: <span class="kbd">${esc(cfg.binId)}</span></div><div class="small" style="margin-bottom:10px">Last synced: ${timeAgo(cfg.lastSyncedAt)} · <a href="https://gist.github.com/${esc(cfg.binId)}" target="_blank" style="color:var(--blue)">view gist ↗</a></div><div class="row"><button class="btn blue" data-action="syncPush">⬆ Push my data</button><button class="btn teal" data-action="syncPull">⬇ Pull latest</button></div><div class="switch-row" style="margin-top:14px"><div><strong style="font-size:13px">Auto-push</strong><div class="small" style="margin-top:2px">Push changes automatically a few seconds after you make them</div></div><button class="ghost" data-action="toggleAutoPush">${cfg.autoPush?'On':'Off'}</button></div><div class="small" style="margin-top:8px">Auto-push always favors this device's changes — if you edit two devices around the same time, one may need a manual Pull.</div><div class="small" style="margin-top:10px">On another device: Settings → Cloud sync → "Link to existing cloud save" → same token + this Gist ID.</div><div id="syncStatus" class="small" style="margin-top:8px"></div><button class="ghost" style="margin-top:10px" data-action="syncUnlink">Unlink this device</button>`);
 }
 let undoRestore=null,undoTimer=null;
 function showUndoToast(message,restoreFn){
