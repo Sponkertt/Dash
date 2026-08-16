@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Personal Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--sky1:#C97A4E;--sky2:#A85A78;--sky3:#5B4695;--sky4:#1E3A66;--glass:rgba(232,238,252,.48);--strong:rgba(255,255,255,.72);--border:rgba(255,255,255,.78);--ink:#241C3D;--muted:#6C5D89;--faint:#9C8DB6;--blue:#2E63C7;--teal:#219E93;--coral:#E85C72;--violet:#8A4FD1;--line:rgba(36,28,61,.13)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Nunito,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--sky1),var(--sky2) 38%,var(--sky3) 68%,var(--sky4));}button,input,textarea{font:inherit}button{cursor:pointer}
+#app{max-width:760px;margin:0 auto;min-height:100vh;padding:20px 16px 30px;position:relative;overflow:hidden}.bubble{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.85),rgba(255,255,255,.04) 45%,rgba(255,255,255,.22) 78%);animation:float 20s ease-in-out infinite;box-shadow:inset -8px -8px 14px rgba(255,255,255,.25),inset 5px 5px 10px rgba(255,255,255,.6),0 4px 16px rgba(120,70,150,.1)}@keyframes float{50%{transform:translateY(-14px) translateX(8px)}}
+.content{position:relative}.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}.title{font:700 27px 'Baloo 2',sans-serif;margin:0}.date{color:var(--muted);font-size:13px}.save{font:10px 'JetBrains Mono',monospace;color:var(--faint)}
+.panel{background:linear-gradient(180deg,var(--strong),var(--glass));border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 30px rgba(120,70,150,.16);backdrop-filter:blur(10px);padding:14px;position:relative;margin-bottom:12px}.panel:before{content:"";position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.6),transparent);pointer-events:none}.panel>*{position:relative}
+.reminder{display:flex;gap:9px;font-size:13px;color:var(--muted);line-height:1.45}.reminder b{color:var(--violet)}
+.tabs,.subtabs{display:flex;gap:4px;padding:3px;background:rgba(255,255,255,.45);border:1px solid var(--border);border-radius:12px;overflow:auto}.tabs{margin-bottom:15px}.tabs button,.subtabs button{border:0;background:transparent;border-radius:9px;padding:8px 12px;font-weight:700;color:var(--faint);white-space:nowrap}.tabs button.active,.subtabs button.active{background:linear-gradient(180deg,#fff,#f4eeff);color:var(--blue);box-shadow:0 2px 6px rgba(62,142,255,.22)}
+.section-title{font:600 15px 'Baloo 2',sans-serif;display:flex;align-items:center;gap:8px}.desc{color:var(--muted);font-size:12px;line-height:1.45}.row{display:flex;gap:8px;align-items:center}.grow{flex:1;min-width:0}.input,.textarea{width:100%;background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);outline:none}.textarea{resize:vertical;line-height:1.5}.btn{border:0;border-radius:10px;padding:10px 14px;color:white;font-weight:700}.btn.blue{background:linear-gradient(180deg,#3E76E0,#2451A8)}.btn.teal{background:linear-gradient(180deg,#2AB8AC,#1C8E84)}.btn.coral{background:linear-gradient(180deg,#F2748A,#D14D63)}.ghost{border:1px dashed rgba(36,28,61,.28);background:rgba(255,255,255,.4);color:var(--muted);border-radius:10px;padding:10px 12px;font-weight:600}
+.drag{position:relative}.handle{display:flex;align-items:center;justify-content:center;gap:2px;height:16px;margin:0 0 -4px;color:var(--faint);opacity:.6;font-size:11px;letter-spacing:2px;cursor:grab;touch-action:none;user-select:none;border-radius:8px 8px 0 0;transition:opacity .15s ease,color .15s ease,background .15s ease}.handle:hover{opacity:1;color:var(--ink);background:rgba(255,255,255,.4)}.handle:active{cursor:grabbing}
+.list{display:flex;flex-direction:column;gap:9px}.scroll{max-height:340px;overflow:auto;padding-right:2px}.scroll::-webkit-scrollbar{width:8px;height:8px}.scroll::-webkit-scrollbar-thumb{background:rgba(126,107,150,.22);border-radius:99px}
+.item{background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:11px;padding:9px}.check{width:22px;height:22px;border-radius:7px;border:0;background:rgba(255,255,255,.72);box-shadow:inset 0 0 0 1.3px var(--line);display:inline-flex;align-items:center;justify-content:center;color:white}.check.done{background:linear-gradient(180deg,#2AB8AC,#1C8E84);box-shadow:none}.remove{border:1px solid var(--line);background:rgba(255,255,255,.6);color:#b5495e;border-radius:8px;width:26px;height:26px}.streak{font:700 10px 'JetBrains Mono',monospace;color:var(--teal);background:rgba(33,158,147,.18);padding:3px 8px;border-radius:999px;white-space:nowrap}.dots{display:flex;gap:8px;margin-top:6px}.dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--faint);background:transparent}.dot.done{background:var(--teal);border-color:var(--teal)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.linkcard{min-height:118px}.muted{color:var(--muted)}.small{font-size:11px;color:var(--faint)}
+.cal-plan-item{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:11px;color:var(--muted);margin:3px 0;line-height:1.35}.cal-plan-item.done{text-decoration:line-through;color:var(--faint)}.cal-remove{flex:none;border:0;background:transparent;color:var(--faint);font-size:13px;line-height:1;padding:0 2px;border-radius:4px;transition:color .15s ease,background .15s ease}.cal-remove:hover{color:#b5495e;background:rgba(181,73,94,.12)}
+.timer{font:500 48px 'JetBrains Mono',monospace;text-align:center;margin:6px 0 12px}.timer-controls{display:flex;gap:4px;margin-bottom:10px;background:rgba(255,255,255,.5);padding:3px;border-radius:10px}.timer-controls button{flex:1;border:0;background:transparent;padding:7px;border-radius:8px;color:var(--faint);font-weight:700}.timer-controls button.active{background:white;color:var(--blue);box-shadow:0 2px 5px rgba(62,142,255,.2)}
+.history-entry{padding:10px 12px}.history-text{font-size:13px;color:var(--muted);line-height:1.45;white-space:pre-wrap}.history-date{font:10.5px 'JetBrains Mono',monospace;color:var(--faint);margin-bottom:4px}.xp-panel{padding:11px 13px}.xp-track{height:8px;background:rgba(255,255,255,.65);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-top:8px}.xp-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--blue),var(--teal));border-radius:99px;transition:width .25s ease}
+@media(max-width:560px){#app{padding:14px 10px}.grid{grid-template-columns:1fr}.title{font-size:24px}}
+
+/* ---- polish pass ---- */
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+.title{background:linear-gradient(135deg,var(--ink) 20%,var(--violet) 70%,var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.1px;text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.date{letter-spacing:.02em}
+.panel{transition:box-shadow .25s ease, transform .25s ease}
+.drag:hover>.panel{box-shadow:0 14px 34px rgba(120,70,150,.22);transform:translateY(-2px)}
+.reminder>div:first-child{animation:sparklePulse 3.2s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(179,107,255,.55))}
+@keyframes sparklePulse{0%,100%{opacity:.75;transform:scale(1) rotate(0deg)}50%{opacity:1;transform:scale(1.18) rotate(8deg)}}
+.btn{transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;box-shadow:0 4px 12px rgba(62,142,255,.22)}
+.btn.teal{box-shadow:0 4px 12px rgba(47,209,196,.28)}
+.btn.coral{box-shadow:0 4px 12px rgba(255,122,138,.28)}
+.btn:hover{transform:translateY(-1.5px);filter:brightness(1.06)}
+.btn:active{transform:translateY(0) scale(.96);filter:brightness(.98)}
+.ghost{transition:transform .15s ease, background .15s ease, box-shadow .15s ease}
+.ghost:hover{background:rgba(255,255,255,.7);transform:translateY(-1.5px);box-shadow:0 4px 10px rgba(120,70,150,.14)}
+.ghost:active{transform:translateY(0) scale(.97)}
+.tabs button,.subtabs button{transition:color .18s ease, background .18s ease, transform .15s ease}
+.tabs button:hover,.subtabs button:hover{color:var(--ink)}
+.tabs button.active,.subtabs button.active{transform:translateY(-1px)}
+.item{transition:background .15s ease, box-shadow .15s ease}
+.check{transition:transform .15s ease, background .2s ease, box-shadow .2s ease}
+.check:active{transform:scale(.86)}
+.check.done{box-shadow:0 3px 10px rgba(47,209,196,.4)}
+.remove{transition:transform .15s ease, background .15s ease, color .15s ease}
+.remove:hover{background:#ffe4e8;color:#c05a6e;transform:scale(1.06)}
+.input,.textarea{transition:box-shadow .18s ease, border-color .18s ease}
+.input:focus,.textarea:focus{box-shadow:0 0 0 3px rgba(62,142,255,.18);border-color:var(--blue)}
+.xp-panel{box-shadow:0 8px 24px rgba(179,107,255,.14)}
+.xp-fill{position:relative;overflow:hidden}
+.xp-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:shimmer 2.4s linear infinite}
+@keyframes shimmer{0%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.streak{box-shadow:0 2px 6px rgba(47,209,196,.25)}
+
+/* timer */
+.timer-top-row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.timer-top-row .timer-controls{flex:1;margin-bottom:0}
+.sound-toggle{flex:none;border:1px solid var(--border);background:rgba(255,255,255,.6);border-radius:10px;width:40px;height:40px;font-size:17px;display:flex;align-items:center;justify-content:center;transition:transform .15s ease, box-shadow .15s ease, background .15s ease}
+.sound-toggle:hover{transform:translateY(-1.5px);box-shadow:0 4px 10px rgba(120,70,150,.18);background:#fff}
+.sound-toggle:active{transform:translateY(0) scale(.92)}
+.timer-ring{--pct:0;--ring-color:#3E76E0;width:176px;height:176px;margin:14px auto 14px;border-radius:50%;position:relative;background:conic-gradient(var(--ring-color) calc(var(--pct)*1%), rgba(255,255,255,.42) 0);transition:background .6s ease;box-shadow:0 10px 30px rgba(120,70,150,.18), inset 0 0 0 1px rgba(255,255,255,.5)}
+.timer-ring-inner{position:absolute;inset:12px;border-radius:50%;background:linear-gradient(160deg,rgba(255,255,255,.94),rgba(255,255,255,.62));display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 3px 10px rgba(255,255,255,.9), inset 0 -8px 16px rgba(120,70,150,.07)}
+.timer-ring .timer{margin:0;font-size:33px;letter-spacing:1px}
+.phase-label{font:700 10.5px 'JetBrains Mono',monospace;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.08em}
+.finished-label{font:700 12px 'Baloo 2',sans-serif;color:var(--coral);margin-top:5px;animation:popIn .45s ease}
+.timer-ring.timer-running{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 10px 30px rgba(120,70,150,.18), inset 0 0 0 1px rgba(255,255,255,.5)}50%{box-shadow:0 10px 36px rgba(62,142,255,.3), inset 0 0 0 1px rgba(255,255,255,.6)}}
+.timer-ring.timer-finished{animation:ringPulse 1s ease-in-out 3}
+@keyframes ringPulse{0%,100%{box-shadow:0 10px 30px rgba(120,70,150,.18)}50%{box-shadow:0 10px 44px rgba(255,122,138,.6),0 0 0 10px rgba(255,122,138,.14)}}
+@keyframes popIn{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* bubbles */
+.bubble{filter:blur(.3px)}
+
+.drag{transition:box-shadow .15s ease}
+.drag.dragging{opacity:.55;box-shadow:0 16px 34px rgba(120,70,150,.32);cursor:grabbing;z-index:20;position:relative}
+.drag.dragging .panel{box-shadow:0 16px 34px rgba(120,70,150,.32)}
+
+@media (prefers-reduced-motion: reduce){*,.bubble{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}}
+
+/* toast / undo */
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(16px);background:rgba(36,28,61,.94);color:#fff;padding:11px 10px 11px 16px;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;box-shadow:0 12px 30px rgba(0,0,0,.3);z-index:200;max-width:min(92vw,380px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{flex:none;background:rgba(255,255,255,.18);border:0;color:#fff;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;transition:background .15s ease}
+.toast button:hover{background:rgba(255,255,255,.3)}
+
+/* empty states */
+.empty-state{text-align:center;color:var(--faint);font-size:12.5px;font-style:italic;padding:20px 10px;line-height:1.5}
+
+/* habit heatmap */
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px;max-width:200px}
+.heat-cell{width:100%;aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.45);border:1px solid var(--line)}
+.heat-cell.done{background:linear-gradient(180deg,#2AB8AC,#1C8E84);border-color:transparent}
+
+/* settings */
+.switch-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stat-trio{display:flex;gap:10px;margin-top:8px}
+.stat-box{flex:1;background:rgba(255,255,255,.4);border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center}
+.stat-num{font:700 21px 'JetBrains Mono',monospace;color:var(--violet)}
+.kbd{display:inline-block;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font:700 11px 'JetBrains Mono',monospace;color:var(--ink)}
+
+/* dark mode */
+html.dark{--sky1:#171426;--sky2:#1B2340;--sky3:#16233F;--sky4:#0A1220;--glass:rgba(26,30,48,.55);--strong:rgba(255,255,255,.07);--border:rgba(255,255,255,.14);--ink:#ECE9FA;--muted:#B0A8CC;--faint:#8078A0;--blue:#6C97F2;--teal:#48D2C3;--coral:#FF8FA1;--violet:#B48CFF;--line:rgba(255,255,255,.14)}
+html.dark .tabs,html.dark .subtabs{background:rgba(255,255,255,.06)}
+html.dark .tabs button.active,html.dark .subtabs button.active{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.06));color:var(--blue)}
+html.dark .input,html.dark .textarea{background:rgba(255,255,255,.08);color:var(--ink);border-color:var(--line)}
+html.dark .item{background:rgba(255,255,255,.055)}
+html.dark .check{background:rgba(255,255,255,.1)}
+html.dark .ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.24)}
+html.dark .sound-toggle{background:rgba(255,255,255,.08);border-color:var(--border)}
+html.dark .sound-toggle:hover{background:rgba(255,255,255,.16)}
+html.dark .timer-ring-inner{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.04));box-shadow:inset 0 3px 10px rgba(255,255,255,.08),inset 0 -8px 16px rgba(0,0,0,.3)}
+html.dark .timer-ring{box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.08)}
+html.dark .panel:before{background:linear-gradient(180deg,rgba(255,255,255,.09),transparent)}
+html.dark .bubble{opacity:.45}
+html.dark .heat-cell{background:rgba(255,255,255,.06)}
+html.dark .stat-box{background:rgba(255,255,255,.05)}
+html.dark .kbd{background:rgba(255,255,255,.1);color:var(--ink)}
+html.dark .scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18)}
+html.dark .toast{background:rgba(10,9,18,.94)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bubble" style="width:74px;height:74px;left:4%;top:8%;border:1px solid rgba(62,142,255,.45)"></div>
+  <div class="bubble" style="width:52px;height:52px;right:5%;top:5%;border:1px solid rgba(179,107,255,.45);animation-duration:23s"></div>
+  <div class="bubble" style="width:94px;height:94px;right:-2%;top:57%;border:1px solid rgba(47,209,196,.45);animation-duration:27s"></div>
+  <div class="bubble" style="width:38px;height:38px;left:9%;top:78%;border:1px solid rgba(255,122,138,.4);animation-duration:19s"></div>
+  <div class="content">
+    <div class="top"><div><h1 class="title" id="greeting">good afternoon</h1><div class="date" id="date"></div></div><div class="save" id="save"></div></div>
+    <div class="panel reminder"><div style="color:var(--violet);font-size:18px">✦</div><div><b id="remSchool"></b> <i id="remLine"></i></div></div>
+    <div class="tabs" id="tabs">
+      <button data-tab="today" class="active">Today</button><button data-tab="goals">Goals</button><button data-tab="journal">Journal</button><button data-tab="calendar">Calendar</button><button data-tab="links">Links</button><button data-tab="settings">Settings</button>
+    </div>
+    <main id="view"></main>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+const KEY='personal-dashboard-v3';
+const prompts=[
+"What's one thing you're grateful for today?","What's weighing on you right now?","What's one small win from today, even a tiny one?","What do you want to remember about today?","What's something you're looking forward to?","What's a thought you keep circling back to?","If today had a theme, what would it be?","What's something you noticed or learned today?","What do you need more of right now?","What would you tell yourself this morning if you could?","What's something that felt hard today, and what helped?","Who or what made today a little easier?","What's a worry you can set down, at least for tonight?","What's one thing going right, even if a lot feels wrong?","What are you proud of that no one else noticed?","What does 'enough' look like for today?","What are you avoiding that might deserve five honest minutes?","What did you do today that matched the person you want to become?","Where did you spend your attention today, and was it worth it?","What belief of yours is worth questioning?","What made you feel most alive today?","What did you learn from something that went wrong?","What are you carrying that you could choose to put down?","What would make tomorrow feel meaningful?","What is one thing you can do slowly instead of rushing?","When today were you most present?","What did you notice because you were not distracted?","What would your future self thank you for doing today?","What is a small discomfort you can practice accepting?","What deserves more of your time than it currently gets?","What are you comparing yourself to, and what does that comparison hide?","What is one ordinary moment you want to remember?","What did you say yes to today, and why?","What did you say no to today, and why?","What is one thing you can control tomorrow?","What does a good day actually mean to you?","What expectation could you loosen tomorrow?","What are you learning about yourself lately?","What is one question you do not need to answer tonight?","What would you do differently if you cared less about looking impressive?","What small act of courage would be useful tomorrow?","What is enough for you today?"];
+const reminders=[
+['Stoicism','A good life starts with knowing what is yours to choose, then choosing it well.'],['Aristotelianism','Character is built through repeated action — practice becoming the person you mean to be.'],['Existentialism','You are responsible for what you do with the freedom you have, even when certainty is unavailable.'],['Epicureanism','A simple life leaves more room to notice pleasure that does not need to be chased.'],['Taoism','Not every problem yields to force; sometimes the wiser move is to stop fighting the current.'],['Buddhist philosophy','Nothing remains exactly as it is, so meet the present without demanding permanence.'],['Absurdism','Even without guaranteed meaning, you can still choose what is worth doing.'],['Stoicism','Ask what is within your control, then spend your energy there.'],['Confucianism','Small repeated acts become character more reliably than one dramatic gesture.'],['Humanism','A life can be meaningful through the dignity, care and curiosity you bring to ordinary moments.'],['Stoicism','Do the next right thing, even when the final outcome is outside your hands.'],['Aristotelianism','Excellence is less a flash of inspiration than a habit practiced until it becomes natural.'],['Existentialism','Meaning is not merely discovered; much of it is made through commitment and choice.'],['Epicureanism','Peace grows when desire is distinguished from what is genuinely necessary.'],['Taoism','Water changes stone without arguing with it; persistence need not look like force.'],['Buddhist philosophy','You can observe a difficult thought without treating it as a command.'],['Absurdism','A life can be worth living even when the universe offers no neat explanation.'],['Stoicism','Do not demand that the day obey you; decide how you will meet the day you get.'],['Confucianism','The quality of ordinary relationships is part of the quality of a life.'],['Humanism','Curiosity can be a form of courage when certainty would be easier.'],['Stoicism','Your attention is a limited resource; spend it where your values can actually act.'],['Aristotelianism','Ask not only what you want, but what repeated choices are turning you into.'],['Existentialism','Freedom can feel heavy because choosing means accepting responsibility for a direction.'],['Epicureanism','A quiet meal, a good conversation, and enough rest can be profound successes.'],['Taoism','Sometimes the best move is to create less resistance and let the useful thing unfold.'],['Buddhist philosophy','Clinging to a preferred outcome can make an ordinary difficulty feel permanent.'],['Absurdism','You do not need certainty before you begin doing something that matters.'],['Stoicism','A setback is an event; the judgment you place on it is another event entirely.'],['Confucianism','Rituals and routines can make good intentions easier to practice.'],['Humanism','A meaningful life can be built from care given repeatedly to people close by.']];
+const sidequests=["Go cloud-watching or star-watching — no goal, just look up", "Explore a trail or park you’ve never been to before", "Try a new route to somewhere ordinary and see what you notice", "Set a 20-minute timer and wander with no destination", "Find a hill or rooftop view and watch the sky change", "Rent or dust off a bike and explore a street you’ve never taken", "Start a photo scavenger hunt: find something red, round, tiny and strange", "Try disc golf or throw a frisbee around an empty field", "Skate, rollerblade, or power-walk somewhere with music", "Hunt down a farmers market or food truck you’ve never tried", "Geocache or letterbox hunt and turn a walk into a treasure hunt", "Bring chalk and draw something ridiculous on a sidewalk", "Fly a kite, even if it flies terribly", "Find a bench, bring a snack, and people-watch for 20 minutes", "Visit a botanical garden, greenhouse, or interesting patch of trees", "Take a night walk and count how many different sounds you hear", "Make a tiny field guide of your block with your phone camera", "Go somewhere with water and sit beside it for a while", "Visit a library and choose a book only because its title catches you", "Go to a museum or gallery and pick one piece to study for ten minutes", "Find a new coffee or tea place and journal there for fifteen minutes", "Take a bus or train a few stops somewhere unfamiliar and explore safely", "Cook or assemble a meal you’ve never made before", "Try a beginner class or tutorial for something completely unrelated to work", "Do a 30-minute cleanup of one neglected corner of your space", "Find a local landmark you’ve never actually stopped to look at", "Walk without headphones for twenty minutes and notice five new things", "Bring a sketchbook outside and draw the first ordinary object you see", "Make a playlist with ten songs you’ve never heard before", "Visit a bookstore and read the first page of three random books", "Take yourself on a $10 micro-adventure with one small treat", "Photograph interesting doors, signs, or textures in your neighborhood", "Sit somewhere public and write down three tiny stories about people you see", "Find a park and do a simple bodyweight workout outside", "Try a new fruit, snack, or ingredient from a grocery store", "Build something small with cardboard, LEGO, paper, or whatever you have", "Spend twenty minutes learning a simple magic trick or puzzle", "Go outside at sunrise or sunset and stay until the light changes", "Pick a road you usually ignore and walk it for fifteen minutes", "Find the oldest-looking tree nearby and sit beside it", "Do a mini urban nature hunt: find five different leaves or plants", "Write a one-page story inspired by something you see outside", "Try a new drawing style by copying an object without erasing", "Visit a place in your town you always say you’ll get around to seeing", "Make a scavenger list for a friend and complete it yourself first", "Take a different route home and photograph your favorite unexpected detail", "Have a phone-free snack outside", "Learn the history of one nearby building or landmark", "Spend twenty minutes rearranging one small area of your room", "Go somewhere quiet and listen to the environment instead of music", "Try a free local workout, yoga session, or mobility routine in a park", "Take a disposable-camera-style photo walk: 12 shots, no retakes", "Find a public piano and play one simple thing, or just listen if someone else is playing", "Go to a local market and buy one ingredient you have never cooked with", "Make a tiny time-lapse of clouds, traffic, shadows, or people moving through a plaza", "Pick a random letter and photograph five things beginning with it", "Walk until you find the most interesting mailbox, gate, mural, or front door nearby", "Bring a thermos outside and read one chapter somewhere you normally never sit", "Try a new sandwich, soup, or pastry from a place you have never ordered from", "Take a short nature walk and collect only observations, not objects", "Find a public fountain, sculpture, or statue and learn one fact about it", "Do a 15-minute sidewalk photography challenge using only one color", "Visit a thrift store and invent a backstory for three interesting objects", "Make a tiny zine on paper about something you learned this week", "Do a sunrise coffee or tea run and stay outside while you drink it", "Pick a neighborhood street and notice how many architectural styles you can spot", "Try a new route while walking and navigate without checking the map until you reach your destination", "Write five haiku about things you see during a walk", "Go to a playground and use one piece of equipment purely because you have not used it in years", "Have an outside breakfast somewhere scenic", "Find a quiet spot and do ten minutes of deliberate observation: sounds, textures, movement", "Visit a hardware store and find the strangest useful object you can spot", "Make a tiny bouquet from fallen leaves or found natural shapes without taking living plants", "Try drawing the same object three different ways in ten minutes", "Find a local event, open house, lecture, or community gathering happening today", "Walk around your neighborhood and rate five benches for comfort and view", "Learn a simple card trick and practice it outside", "Take a notebook to a public place and write down ten overheard phrases without identifying anyone", "Go to a park at a different time of day than usual and notice what changes", "Find a hill, staircase, or trail and walk it three times at an easy pace", "Try a 20-minute silent walk where your only goal is noticing details", "Build a tiny obstacle course for yourself using safe objects at home or in a yard", "Learn to identify three local birds, trees, or plants on a walk", "Take a photo of your shadow in five different places", "Make a one-day rule to say yes to one harmless spontaneous invitation or idea", "Find a place with a view and sketch the horizon line only", "Visit a community garden and look for five different textures", "Do a 'stranger route' challenge: at each intersection pick the direction you normally would not", "Create a mini field recording: capture one minute each of three different outdoor sounds", "Bring a snack to a place with a view and eat it slowly with your phone away", "Try a new kind of puzzle, crossword, sudoku, or logic game somewhere outside", "Go to a bookstore or library and browse a section you never normally visit", "Pick a nearby landmark and take the long way there", "Make a tiny scavenger hunt using ten shapes and complete it in 30 minutes", "Try a new form of movement: jump rope, juggling, hula hoop, or balancing", "Find a local mural and make a color palette from it", "Take a walk after dark in a familiar, safe area and notice how the same place feels different", "Find an unfamiliar podcast episode and listen to it while walking", "Make a one-page 'today guide' to your neighborhood for a fictional tourist", "Sit somewhere busy for fifteen minutes and observe patterns rather than individual people", "Find three places in your town where you can see water", "Have a no-screen hour and fill it with anything physical or creative", "Make a paper airplane and test different folds outside", "Do a five-item architecture hunt: arch, column, unusual window, old sign, interesting roof", "Find a quiet corner and practice sketching with your non-dominant hand", "Take a walk with a disposable or instant-camera mindset: one frame, one thought", "Try a beginner language lesson while sitting somewhere different", "Visit a public garden or greenhouse and photograph five different leaf shapes", "Find a safe overlook and write three sentences about what the horizon makes you think about", "Do a 'tiny adventures' loop: three 5-minute stops in places you usually pass", "Walk around one block and count every different type of fence or railing", "Pick one local shop you have never entered and browse without buying anything", "Find a public noticeboard and read the kinds of things your community is posting", "Try making a meal from only ingredients you already have, but in a new combination", "Do a 30-minute music-only drawing session: draw what the playlist makes you imagine", "Find a place to sit and watch the weather change for twenty minutes", "Make a map of your favorite five places within walking distance", "Try a new pen, pencil, or drawing tool and fill one page", "Take a walk focused only on reflections in windows, puddles, and mirrors", "Go to a park and invent three imaginary games for the space", "Pick a number from 1-10 and walk that many blocks before choosing where to stop", "Find the oldest object you own and take it somewhere new for a photo", "Spend 20 minutes reorganizing one shelf while listening to an album all the way through", "Try a food or drink from a culture you have not explored before", "Find a safe public place with good acoustics and clap/tap rhythms to hear the space", "Make a list of ten things you want to do in your city before the year ends", "Take the scenic route to a normal errand", "Find three oddly specific signs or instructions in public and photograph them", "Try a mini watercolor or marker study of the sky", "Sit under a tree and read until you naturally want to look up", "Make a one-hour micro-retreat at home: tea, music, reading, no notifications", "Pick one ordinary object and learn how it is made", "Walk somewhere with a camera and only photograph circles", "Find a local staircase and count the steps", "Do a five-minute balancing or coordination challenge outside", "Try a different style of breakfast than you normally eat", "Visit a secondhand book section and choose a book by the first sentence", "Take a quiet walk and memorize one poem, quote, or paragraph", "Create a tiny personal museum at home with five objects and labels", "Go somewhere familiar and pretend you are visiting for the first time", "Learn the name and history of one street, park, or public building nearby", "Take a 25-minute sketch-and-walk break", "Find a place where you can watch trains, planes, boats, or other movement safely", "Make a playlist for a fictional road trip and take a walk while listening", "Do a 10-minute cleanup outside your home or in a shared area", "Photograph interesting shadows at different times of day", "Find a quiet place to do three minutes of breathing followed by ten minutes of walking", "Take yourself on a 'yes to novelty' walk: every safe unfamiliar thing gets a closer look", "Find a local landmark and write a postcard to someone describing it", "Try a new type of tea, coffee, sparkling water, or nonalcoholic drink and rate it", "Build a tiny sculpture from paper, cardboard, or recyclable materials", "Walk through a store you rarely visit and find the most surprisingly useful item", "Spend an hour following your curiosity without opening social media", "Find five examples of symmetry in your surroundings", "Try a new recipe from a cookbook you have not opened before", "Explore a public building you have permission to enter and notice its design", "Find a spot with a breeze and read for 20 minutes", "Make a 'sound map' of one block", "Take a walk with the goal of finding something beautiful in an ordinary place", "Choose a random household object and use it as inspiration for a story", "Go somewhere green and count how many shades of green you can distinguish", "Do a 15-minute mobility or stretching session in an unusual but safe place", "Find three local businesses you have never noticed before", "Take a photo every five minutes on a walk and review the sequence afterward", "Write down ten tiny things that made you smile today and then go looking for one more", "Try a new way of getting around for one short trip", "Explore a local park from a path you have never taken", "Make a tiny outdoor still life and photograph it", "Read a chapter of a philosophy book somewhere outside", "Visit a local art supply store and get inspired without needing to buy anything", "Walk until you hear a sound you cannot immediately identify, then investigate safely", "Do a 30-minute 'tourist in my own town' session", "Try a simple rhythm or percussion pattern while walking", "Find a place where two different environments meet and observe the transition", "Choose one sense to focus on for ten minutes: sight, sound, smell, touch, or taste", "Make a list of five future sidequests while on a walk", "Take your notebook somewhere with a view and write without editing for ten minutes", "Try a different route through a familiar store", "Find one small piece of public art you have never noticed", "Take a break from your normal playlist and listen to a complete album", "Go outside and look for the first bird, dog, bike, or flower you can spot", "Have a snack in a place you have never eaten before", "Make a tiny 'best of today' photo series with three pictures", "Spend twenty minutes following a curiosity you would normally ignore", "Do an easy neighborhood loop and rate the route on scenery, quiet, and surprise"];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const localKey=(d=new Date())=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day};
+const today=()=>localKey();
+const dayOffset=o=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-o);return localKey(d)};
+const doy=()=>{const d=new Date(),s=new Date(d.getFullYear(),0,0);return Math.floor((d-s)/86400000)};
+const defaults={xp:0,habits:[{id:uid(),name:'Move your body',history:{}},{id:uid(),name:'Code / study',history:{}}],goals:[{id:uid(),title:'Get comfortable with Python',subtasks:[{id:uid(),text:'Finish one HTB box',done:false},{id:uid(),text:'Write one script for something annoying',done:false}],rewardClaimed:false}],links:[{id:uid(),name:'HackTheBox',url:'https://app.hackthebox.com',category:'Practice'},{id:uid(),name:'988 Lifeline',url:'https://988lifeline.org',category:'Support'}],journalEntries:[],brainDump:[],plans:{},sessions:[],order:{today:['timer','sidequest','plan'],journal:['journal','dump']}};
+let data=load(); let tab='today'; let reminderIndex=doy()%reminders.length; let sidequestIndex=Math.floor(Math.random()*sidequests.length); let calendarCursor=new Date(); calendarCursor.setDate(1); let calendarComposeDate=null; let dumpGoalId=null; let timer={mode:'timer',running:false,remaining:600,total:600,stopwatch:0,work:25,break:5,phase:'work',interval:null,finished:false};
+let soundOn=localStorage.getItem('personal-dashboard-sound')!=='off';
+let audioCtx=null;
+function playChime(kind){
+  if(!soundOn) return;
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const now=audioCtx.currentTime;
+    const notes=kind==='finish'?[523.25,659.25,783.99,1046.50]:[659.25,987.77];
+    notes.forEach((freq,i)=>{
+      const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+      osc.type='sine'; osc.frequency.value=freq;
+      const start=now+i*0.15;
+      gain.gain.setValueAtTime(0,start);
+      gain.gain.linearRampToValueAtTime(0.22,start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,start+0.55);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(start); osc.stop(start+0.6);
+    });
+  }catch(e){}
+}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');return {...structuredClone(defaults),...x,xp:Number.isFinite(x?.xp)?x.xp:0,habits:x?.habits||structuredClone(defaults.habits),goals:(x?.goals||[]).map(g=>({...g,rewardClaimed:!!g.rewardClaimed})),links:x?.links||[],journalEntries:(x?.journalEntries||[]).map(e=>({...e,promptIndex:Number.isInteger(e.promptIndex)?e.promptIndex:(e.date===today()?doy()%prompts.length:null)})),brainDump:x?.brainDump||[],plans:x?.plans||{},sessions:Array.isArray(x?.sessions)?x.sessions:[],order:{...defaults.order,...(x?.order||{})}}}catch(e){return structuredClone(defaults)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));const s=document.getElementById('save');s.textContent='saved ✓';setTimeout(()=>s.textContent='',900)}
+function setData(fn){fn();save();render()}
+function streak(h){let start=h[today()]?0:1;let n=0;for(let o=start;o<366;o++){if(!h[dayOffset(o)])break;n++}return n}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function btn(label,cls,action){return `<button class="btn ${cls}" data-action="${action}">${label}</button>`}
+function panel(inner,cls=''){return `<div class="panel ${cls}">${inner}</div>`}
+function dragWrap(id,inner){return `<div class="drag" data-drag="${id}"><div class="handle" title="Drag to reorder">••••••</div>${inner}</div>`}
+let dragState=null;
+function setupDrag(root){
+  root.querySelectorAll('.handle').forEach(handle=>{
+    handle.addEventListener('pointerdown',onHandleDown);
+  });
+}
+function onHandleDown(e){
+  const dragEl=e.currentTarget.closest('[data-drag]');
+  if(!dragEl) return;
+  e.preventDefault();
+  const container=dragEl.parentElement;
+  try{ dragEl.setPointerCapture(e.pointerId); }catch(err){}
+  dragState={dragEl,container};
+  dragEl.classList.add('dragging');
+  document.addEventListener('pointermove',onDragMove,{passive:false});
+  document.addEventListener('pointerup',onDragUp,{once:true});
+  document.addEventListener('pointercancel',onDragUp,{once:true});
+}
+function onDragMove(e){
+  if(!dragState) return;
+  if(e.cancelable) e.preventDefault();
+  const {dragEl,container}=dragState;
+  const els=document.elementsFromPoint(e.clientX,e.clientY);
+  const target=els.find(el=>el!==dragEl && el.parentElement===container && el.hasAttribute && el.hasAttribute('data-drag'));
+  if(target){
+    const r=target.getBoundingClientRect();
+    const before=e.clientY < r.top+r.height/2;
+    container.insertBefore(dragEl, before?target:target.nextSibling);
+  }
+}
+function onDragUp(){
+  if(!dragState) return;
+  const {dragEl,container}=dragState;
+  dragEl.classList.remove('dragging');
+  document.removeEventListener('pointermove',onDragMove);
+  applyOrderFromDom(container);
+  dragState=null;
+}
+function applyOrderFromDom(container){
+  const ids=Array.from(container.querySelectorAll(':scope > [data-drag]')).map(el=>el.dataset.drag);
+  if(!ids.length) return;
+  if(tab==='today') data.order.today=ids;
+  else if(tab==='journal') data.order.journal=ids;
+  else if(tab==='goals'&&window.goalSub==='habits') data.habits.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  else if(tab==='goals') data.goals.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  else if(tab==='links') data.links.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  save(); render();
+}
+function levelFromXp(xp){let level=1,spent=0;while(xp>=level*100){xp-=level*100;spent+=level*100;level++;if(level>1000)break}return {level,current:xp,needed:level*100,total:spent+xp};}
+function addXp(amount){data.xp=(Number(data.xp)||0)+amount;}
+function goalXp(goal){return 100+Math.max(0,(goal.subtasks?.length||0)-1)*50;}
+function xpBar(){const x=levelFromXp(Number(data.xp)||0),pct=Math.round((x.current/x.needed)*100);return `<div class="panel xp-panel"><div class="row"><div class="grow"><div class="section-title">⭐ Level ${x.level}</div><div class="small" style="margin-top:3px">${x.current} / ${x.needed} XP to level ${x.level+1}</div></div><strong style="font:700 12px 'JetBrains Mono',monospace;color:var(--violet)">${data.xp} XP</strong></div><div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div></div>`}
+
+function applyTheme(){const dark=localStorage.getItem('personal-dashboard-theme')==='dark';document.documentElement.classList.toggle('dark',dark)}
+function getSyncConfig(){try{return JSON.parse(localStorage.getItem('personal-dashboard-sync')||'null')}catch(e){return null}}
+function setSyncConfig(cfg){localStorage.setItem('personal-dashboard-sync',JSON.stringify(cfg))}
+function setSyncStatus(msg){const el=document.getElementById('syncStatus');if(el)el.textContent=msg}
+async function syncRequest(url,opts){
+  const res=await fetch(url,opts);
+  if(!res.ok){const t=await res.text().catch(()=>'');throw new Error(`${res.status} ${t.slice(0,140)}`)}
+  return res.json();
+}
+async function syncCreateBin(){
+  const key=document.getElementById('syncApiKey')?.value.trim();
+  if(!key){alert('Paste your JSONBin.io Master Key first.');return}
+  setSyncStatus('Creating your cloud save…');
+  try{
+    const json=await syncRequest('https://api.jsonbin.io/v3/b',{method:'POST',headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'personal-dashboard'},body:JSON.stringify(data)});
+    const binId=json && json.metadata && json.metadata.id;
+    if(!binId) throw new Error('No bin id returned');
+    setSyncConfig({apiKey:key,binId});
+    render();
+  }catch(err){alert('Could not create a cloud save: '+err.message);render()}
+}
+async function syncLinkExisting(){
+  const key=document.getElementById('syncApiKeyLink')?.value.trim();
+  const binId=document.getElementById('syncBinId')?.value.trim();
+  if(!key||!binId){alert('Enter both the Master Key and the Bin ID from your other device.');return}
+  try{
+    await syncRequest(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{'X-Master-Key':key}});
+    setSyncConfig({apiKey:key,binId});
+    if(confirm('Linked! Pull the saved data from that bin now? This will replace what is on this device.')){await syncPull()}else{render()}
+  }catch(err){alert('Could not link to that bin: '+err.message)}
+}
+async function syncPush(){
+  const cfg=getSyncConfig();if(!cfg)return;
+  setSyncStatus('Pushing…');
+  try{
+    await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},body:JSON.stringify(data)});
+    setSyncStatus('Pushed ✓ '+new Date().toLocaleTimeString());
+  }catch(err){setSyncStatus('Push failed: '+err.message)}
+}
+async function syncPull(){
+  const cfg=getSyncConfig();if(!cfg)return;
+  setSyncStatus('Pulling…');
+  try{
+    const json=await syncRequest(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:{'X-Master-Key':cfg.apiKey}});
+    const remote=json&&json.record;
+    if(remote){data={...structuredClone(defaults),...remote};save();render();setSyncStatus('Pulled ✓ '+new Date().toLocaleTimeString())}
+  }catch(err){setSyncStatus('Pull failed: '+err.message)}
+}
+function syncUnlink(){localStorage.removeItem('personal-dashboard-sync');render()}
+function renderSyncPanel(){
+  const cfg=getSyncConfig();
+  if(!cfg){
+    return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 12px">Link this device to the same save as your other devices, using a free <a href="https://jsonbin.io" target="_blank" style="color:var(--blue)">JSONBin.io</a> account.</div><div class="small" style="margin-bottom:8px"><b>First device:</b> sign up free at jsonbin.io → Account → API Keys → copy your Master Key → paste below.</div><input id="syncApiKey" class="input" placeholder="Paste your JSONBin.io Master Key" style="margin-bottom:8px"><button class="btn blue" data-action="syncCreate">Create my cloud save</button><div class="small" style="margin:16px 0 8px"><b>Other devices:</b> use the same Master Key, plus the Bin ID shown here after setup.</div><input id="syncApiKeyLink" class="input" placeholder="Master Key" style="margin-bottom:6px"><input id="syncBinId" class="input" placeholder="Bin ID" style="margin-bottom:8px"><button class="ghost" data-action="syncLinkExisting">Link to existing cloud save</button><div id="syncStatus" class="small" style="margin-top:8px"></div>`);
+  }
+  return panel(`<div class="section-title">☁️ Cloud sync</div><div class="desc" style="margin:6px 0 10px">This device is linked. Bin ID: <span class="kbd">${esc(cfg.binId)}</span></div><div class="row"><button class="btn blue" data-action="syncPush">⬆ Push my data</button><button class="btn teal" data-action="syncPull">⬇ Pull latest</button></div><div class="small" style="margin-top:10px">On another device: Settings → Cloud sync → "Link to existing cloud save" → same Master Key + this Bin ID.</div><div id="syncStatus" class="small" style="margin-top:8px"></div><button class="ghost" style="margin-top:10px" data-action="syncUnlink">Unlink this device</button>`);
+}
+let undoRestore=null,undoTimer=null;
+function showUndoToast(message,restoreFn){
+  undoRestore=restoreFn;
+  const t=document.getElementById('toast');
+  if(!t) return;
+  t.innerHTML=`<span>${message}</span><button data-action="undoDelete">Undo</button>`;
+  t.classList.add('show');
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(()=>{t.classList.remove('show');undoRestore=null},6000);
+}
+function heatmapCells(h){
+  const days=Array.from({length:28},(_,i)=>27-i);
+  return `<div class="heatmap">${days.map(o=>{const key=dayOffset(o),done=!!h.history[key];const d=new Date();d.setDate(d.getDate()-o);const label=d.toLocaleDateString(undefined,{month:'short',day:'numeric'});return `<span class="heat-cell ${done?'done':''}" title="${label}${done?' ✓ done':''}"></span>`}).join('')}</div>`;
+}
+function updateTabTitle(){
+  if(timer.running){
+    const val=timer.mode==='stopwatch'?timer.stopwatch:timer.remaining;
+    const mm=String(Math.floor(val/60)).padStart(2,'0'),ss=String(val%60).padStart(2,'0');
+    document.title=`${mm}:${ss} · Dashboard`;
+  } else {
+    document.title='Personal Dashboard';
+  }
+}
+function greetingText(){const h=new Date().getHours();if(h<5)return 'still up?';if(h<12)return 'good morning';if(h<17)return 'good afternoon';if(h<21)return 'good evening';return 'good night'}
+function updateHeader(){
+  const g=document.getElementById('greeting'); if(g) g.textContent=greetingText();
+  const d=document.getElementById('date'); if(d){
+    const now=new Date();
+    const dateStr=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+    const timeStr=now.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    d.textContent=`${dateStr} · ${timeStr}`;
+  }
+}
+function render(){
+  updateHeader();
+  updateTabTitle();
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const r=reminders[reminderIndex%reminders.length];document.getElementById('remSchool').textContent=r[0]+':';document.getElementById('remLine').textContent=r[1];document.getElementById('view').innerHTML=(tab==='settings'?'':xpBar())+(tab==='today'?renderToday():tab==='goals'?renderGoals():tab==='journal'?renderJournal():tab==='calendar'?renderCalendar():tab==='links'?renderLinks():renderSettings());bind();}
+function renderToday(){const key=today(),items=data.plans[key]||[],q=sidequests[sidequestIndex%sidequests.length];return data.order.today.map(k=>{if(k==='timer')return dragWrap('timer',renderTimer());if(k==='sidequest')return dragWrap('sidequest',panel(`<div class="section-title">🧭 Sidequest</div><div class="desc" style="margin:4px 0 10px">Something fun and active, outside, solo-friendly.</div><div class="item" style="font-size:13.5px;line-height:1.45">${esc(q)}</div><div class="row" style="margin-top:8px">${btn('＋ Add to today','coral','addSidequest')}<button class="ghost grow" data-action="rerollSidequest">↻ Reroll suggestion</button></div>`));return dragWrap('plan',panel(`<div class="row"><div class="section-title grow">Today's plan</div><span class="small">${items.filter(x=>x.done).length}/${items.length}</span></div><div class="scroll" style="margin-top:8px">${items.length?items.map((x,i)=>`<div class="item row" style="margin-bottom:7px"><button class="check ${x.done?'done':''}" data-action="togglePlan" data-id="${x.id}">${x.done?'✓':''}</button><div class="grow" style="font-size:13px;${x.done?'text-decoration:line-through;color:var(--faint)':''}">${esc(x.text)}</div><button class="remove" data-action="removePlan" data-id="${x.id}">×</button></div>`).join(''):'<div class="small" style="text-align:center;padding:12px">no plan yet</div>'}</div><div class="row" style="margin-top:8px"><input id="planInput" class="input grow" placeholder="add a step to today…">${btn('＋','blue','addPlan')}</div>`));}).join('')}
+function renderCalendar(){
+  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
+  const first=new Date(y,m,1), daysInMonth=new Date(y,m+1,0).getDate(), start=(first.getDay()+6)%7;
+  const names=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const cells=[]; for(let i=0;i<start;i++) cells.push(`<div class="item" style="min-height:92px;opacity:.35"></div>`);
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(y,m,d); const k=localKey(date); const items=data.plans[k]||[]; const isToday=k===today();
+    cells.push(`<div class="item" style="min-height:92px;${isToday?'outline:2px solid var(--blue);outline-offset:-2px;':''}"><div class="row"><strong style="font-size:12px">${d}</strong>${items.length?`<span class="small">${items.length}</span>`:''}</div><div class="scroll" style="max-height:52px;margin-top:5px">${items.map(x=>`<div class="cal-plan-item ${x.done?'done':''}"><span class="grow">${esc(x.text)}</span><button class="cal-remove" data-action="removeCalendarPlan" data-date="${k}" data-id="${x.id}" title="Remove">×</button></div>`).join('')}</div><button class="ghost" style="padding:4px 7px;font-size:10px;margin-top:5px" data-action="calendarAdd" data-date="${k}">＋ plan</button></div>`);
+  }
+  const composer=calendarComposeDate?`<div class="panel" style="margin-top:10px"><div class="section-title">Plan for ${new Date(calendarComposeDate+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div><div class="row" style="margin-top:8px"><input id="calendarPlanInput" class="input grow" placeholder="What do you want to plan?"><button class="btn blue" data-action="calendarSave">Add</button><button class="ghost" data-action="calendarCancel">Cancel</button></div><div class="small" style="margin-top:5px">Press Add or use the Plan button on any day.</div></div>`:'';
+  return panel(`<div class="row"><div class="section-title grow">📅 Planning calendar</div><span class="small">Plan ahead</span></div><div class="row" style="margin:9px 0"><button class="ghost" data-action="calendarPrev">←</button><strong class="grow" style="text-align:center;font-size:14px">${calendarCursor.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</strong><button class="ghost" data-action="calendarNext">→</button><button class="ghost" data-action="calendarToday">Today</button></div><div class="grid" style="grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px">${names.map(n=>`<div style="font-size:10px;color:var(--faint);text-align:center">${n}</div>`).join('')}</div><div class="grid" style="grid-template-columns:repeat(7,1fr);gap:5px">${cells.join('')}</div>${composer}`);
+}
+function renderTimer(){
+  let display=timer.mode==='stopwatch'?timer.stopwatch:timer.remaining;
+  const mm=String(Math.floor(display/60)).padStart(2,'0'),ss=String(display%60).padStart(2,'0');
+  const settings=timer.mode==='timer'?`<div class="row" style="justify-content:center;margin-bottom:10px"><span class="small">minutes</span><input id="timerMinutes" class="input" type="number" min="1" max="180" value="${Math.max(1,Math.round(timer.remaining/60))}" style="width:78px;text-align:center"></div>`:timer.mode==='pomodoro'?`<div class="row" style="justify-content:center;margin-bottom:10px"><span class="small">focus</span><input id="pomFocus" class="input" type="number" min="1" max="120" value="${timer.work}" style="width:64px;text-align:center"><span class="small">break</span><input id="pomBreak" class="input" type="number" min="1" max="60" value="${timer.break}" style="width:64px;text-align:center"></div>`:'';
+  const total=Math.max(1,timer.total||600);
+  const pct=timer.mode==='stopwatch'?0:Math.min(100,Math.max(0,Math.round(((total-timer.remaining)/total)*100)));
+  const ringColor=timer.mode==='pomodoro'&&timer.phase==='break'?'#2AB8AC':'#3E76E0';
+  const ringClass='timer-ring'+(timer.running?' timer-running':'')+(timer.finished?' timer-finished':'');
+  const soundBtn=`<button class="sound-toggle" data-action="timerToggleSound" title="${soundOn?'Mute chime':'Unmute chime'}">${soundOn?'🔔':'🔕'}</button>`;
+  return panel(`<div class="timer-top-row"><div class="timer-controls"><button data-action="timerMode" data-mode="timer" class="${timer.mode==='timer'?'active':''}">Timer</button><button data-action="timerMode" data-mode="stopwatch" class="${timer.mode==='stopwatch'?'active':''}">Stopwatch</button><button data-action="timerMode" data-mode="pomodoro" class="${timer.mode==='pomodoro'?'active':''}">Pomodoro</button></div>${soundBtn}</div>${settings}<div class="${ringClass}" style="--pct:${pct};--ring-color:${ringColor}"><div class="timer-ring-inner"><div class="timer">${mm}:${ss}</div>${timer.mode==='pomodoro'?`<div class="phase-label">${timer.phase==='work'?'🎯 Focus':'☕ Break'}</div>`:''}${timer.finished?`<div class="finished-label">✨ Time's up!</div>`:''}</div></div><div class="row">${btn(timer.running?'Pause':'Start',timer.running?'teal':'blue','timerToggle')}<button class="ghost" data-action="timerReset">Reset</button></div>`,'timer-panel') }
+function renderGoals(){const sub=window.goalSub||'goals';return `<div class="subtabs" style="margin-bottom:12px"><button data-action="goalSub" data-sub="goals" class="${sub==='goals'?'active':''}">Goals</button><button data-action="goalSub" data-sub="habits" class="${sub==='habits'?'active':''}">Habits</button></div>${sub==='habits'?renderHabits():renderGoalList()}`}
+function renderHabits(){return `<div class="list">${data.habits.length?data.habits.map(h=>dragWrap(h.id,panel(`<div class="row"><button class="check ${h.history[today()]?'done':''}" data-action="toggleHabit" data-id="${h.id}">${h.history[today()]?'✓':''}</button><div class="grow"><div class="row"><strong class="grow">${esc(h.name)}</strong><span class="streak">${streak(h)} day${streak(h)===1?'':'s'}</span></div>${heatmapCells(h)}</div><button class="remove" data-action="removeHabit" data-id="${h.id}">×</button></div>`))).join(''):panel(`<div class="empty-state">No habits yet — add one below to start a streak 🔥</div>`)}</div><div style="margin-top:10px" class="row"><input id="habitInput" class="input grow" placeholder="new habit…">${btn('Add','teal','addHabit')}</div>`}
+function renderGoalList(){return `<div class="list">${data.goals.length?data.goals.map(g=>{const total=g.subtasks.length,done=g.subtasks.filter(s=>s.done).length,complete=total>0&&done===total,reward=goalXp(g);return dragWrap(g.id,panel(`<div class="row"><strong class="grow">${esc(g.title)}</strong><span class="small">+${reward} XP</span><button class="remove" data-action="removeGoal" data-id="${g.id}">×</button></div>${total?`<div class="small" style="margin-top:6px">${done}/${total} steps complete</div>`:''}<div style="margin-top:8px">${g.subtasks.map(s=>`<div class="row" style="margin:7px 0"><button class="check ${s.done?'done':''}" data-action="toggleSub" data-gid="${g.id}" data-id="${s.id}">${s.done?'✓':''}</button><span class="grow" style="font-size:13px;${s.done?'text-decoration:line-through;color:var(--faint)':''}">${esc(s.text)}</span><button class="remove" data-action="removeSub" data-gid="${g.id}" data-id="${s.id}">×</button></div>`).join('')}<div class="row" style="margin-top:8px"><input id="sub-${g.id}" class="input grow" placeholder="add a step…">${btn('＋','blue','addSub')}<input type="hidden" value="${g.id}"></div></div>${complete?`<div class="small" style="margin-top:8px;color:var(--teal);font-weight:700">✓ Goal complete${g.rewardClaimed?'':' — XP awarded!'}</div>`:''}`))}).join(''):panel(`<div class="empty-state">No goals yet — add one below to start tracking progress 🎯</div>`)}</div><div style="margin-top:10px" class="row"><input id="goalInput" class="input grow" placeholder="new goal…">${btn('Add','teal','addGoal')}</div>`}
+function renderJournal(){const key=today(), promptIndex=doy()%prompts.length, prompt=prompts[promptIndex], current=data.journalEntries.find(e=>e.date===key && e.promptIndex===promptIndex);const order=data.order.journal;const journal=panel(`<div class="section-title">✦ Today's prompt</div><div style="font-size:14.5px;line-height:1.4;margin:8px 0 12px;font-weight:600">${prompt}</div><textarea id="journalText" class="textarea" rows="6" placeholder="write whatever comes up…">${current?esc(current.text):''}</textarea><div class="row" style="margin-top:8px"><button class="btn blue grow" data-action="saveJournal">Save journal entry</button><span class="small">Prompt ${promptIndex+1} • ${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></div><div class="small" style="margin-top:6px">When the daily prompt changes, today's journal starts blank and the previous entry stays in Past journals.</div>`);const goalComposer=dumpGoalId?(()=>{const d=data.brainDump.find(x=>x.id===dumpGoalId);return d?`<div class="panel" style="margin-top:10px"><div class="small" style="margin-bottom:6px">Turn this dump into a goal</div><div class="small" style="margin-bottom:8px">${esc(d.text)}</div><div class="row"><input id="dumpGoalTitle" class="input grow" value="${esc(shortTitle(d.text))}" placeholder="Rename your goal…"><button class="btn teal" data-action="confirmDumpGoal">Create goal</button><button class="ghost" data-action="cancelDumpGoal">Cancel</button></div></div>`:''})():'';
+const dump=panel(`<div class="section-title">🌬 Brain dump</div><div class="desc" style="margin:4px 0 10px">Get a thought, project idea or todo out of your head. The pile stays scrollable.</div><textarea id="dumpText" class="textarea" rows="3" placeholder="type it out…"></textarea><div style="margin-top:8px">${btn('＋ Save to the pile','blue','addDump')}</div><div class="scroll" style="margin-top:10px">${data.brainDump.length?data.brainDump.map(x=>`<div class="item row" style="margin-bottom:7px"><div class="grow">${esc(x.text)}</div><button class="ghost" style="padding:5px 8px;font-size:10px" data-action="dumpToGoal" data-id="${x.id}">↗ goal</button><button class="remove" data-action="removeDump" data-id="${x.id}">×</button></div>`).join(''):'<div class="empty-state">Nothing in the pile — dump a thought above 🌬</div>'}</div>${goalComposer}`);return order.map(k=>k==='journal'?dragWrap('journal',journal):dragWrap('dump',dump)).join('')+renderHistory()}
+function renderHistory(){const entries=data.journalEntries.filter(e=>e.text&&e.text.trim()).sort((a,b)=>b.date.localeCompare(a.date));if(!entries.length)return '';return panel(`<div class="row"><div class="section-title grow">Past journals</div><span class="small">${entries.length} saved</span></div><input id="journalSearchInput" class="input" placeholder="🔍 Search past entries…" style="margin-top:8px" oninput="filterJournalHistory(this.value)"><div class="scroll" style="max-height:420px;margin-top:8px">${entries.map(e=>`<div class="item history-entry" data-search="${esc(e.text.toLowerCase())}" style="margin-bottom:8px"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><div class="history-date grow">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div><button class="remove" data-action="removeJournalEntry" data-date="${e.date}" data-pi="${e.promptIndex}" title="Delete entry">×</button></div><div class="history-text">${esc(e.text)}</div></div>`).join('')}<div id="journalNoResults" class="empty-state" style="display:none">No entries match your search</div></div>`)}
+function filterJournalHistory(q){
+  q=q.trim().toLowerCase();
+  let anyVisible=false;
+  document.querySelectorAll('.history-entry').forEach(el=>{
+    const match=!q||(el.dataset.search||'').includes(q);
+    el.style.display=match?'':'none';
+    if(match) anyVisible=true;
+  });
+  const none=document.getElementById('journalNoResults');
+  if(none) none.style.display=(q&&!anyVisible)?'':'none';
+}
+function renderLinks(){return `<div class="grid">${data.links.length?data.links.map(l=>dragWrap(l.id,panel(`<div class="row"><div class="grow"><div style="font-weight:700;font-size:13px">${esc(l.name)}</div><div class="small" style="margin-top:4px">${esc(l.category||'Other')}</div></div><button class="remove" data-action="removeLink" data-id="${l.id}">×</button></div><a href="${esc(l.url)}" target="_blank" style="display:block;margin-top:14px;color:var(--blue);font-size:12px;word-break:break-all;text-decoration:none">${esc(l.url)}</a>`))).join(''):`<div style="grid-column:1/-1">${panel(`<div class="empty-state">No quick-links yet — add one below to build your launcher 🚀</div>`)}</div>`}</div><div style="margin-top:10px">${panel(`<div class="section-title">Add a link</div><div class="list" style="margin-top:8px"><input id="linkName" class="input" placeholder="Name"><input id="linkUrl" class="input" placeholder="URL"><input id="linkCat" class="input" placeholder="Category"><div>${btn('Save link','blue','addLink')}</div></div>`)}</div>`}
+function renderSettings(){
+  const dark=document.documentElement.classList.contains('dark');
+  const sessions=data.sessions||[];
+  const totalMin=sessions.reduce((s,x)=>s+(Number(x.minutes)||0),0);
+  const todayMin=sessions.filter(x=>x.date===today()).reduce((s,x)=>s+(Number(x.minutes)||0),0);
+  const totalHrs=Math.round((totalMin/60)*10)/10;
+  return panel(`<div class="section-title">⚙ Appearance</div><div class="switch-row" style="margin-top:10px"><div><strong style="font-size:13.5px">Dark mode</strong><div class="small" style="margin-top:3px">A deeper, low-light version of the theme</div></div><button class="ghost" data-action="toggleDark">${dark?'☀️ Light':'🌙 Dark'}</button></div>`)
+  +renderSyncPanel()
+  +panel(`<div class="section-title">💾 Backup</div><div class="desc" style="margin:6px 0 12px">Download your data as a file you can keep, or restore from a backup.</div><div class="row"><button class="btn blue" data-action="exportData">⬇ Export data</button><button class="ghost" data-action="importData">⬆ Import data</button></div><input type="file" id="importFileInput" accept="application/json" style="display:none"><div class="small" style="margin-top:10px">Importing replaces everything currently saved on this device.</div>`)
+  +panel(`<div class="section-title">🔥 Focus sessions</div><div class="stat-trio"><div class="stat-box"><div class="stat-num">${sessions.length}</div><div class="small">total sessions</div></div><div class="stat-box"><div class="stat-num">${totalHrs}h</div><div class="small">total focused</div></div><div class="stat-box"><div class="stat-num">${todayMin}m</div><div class="small">today</div></div></div>${sessions.length?'':'<div class="empty-state" style="padding-top:14px">Finish a timer or pomodoro focus block to start logging sessions</div>'}`)
+  +panel(`<div class="section-title">⌨️ Keyboard shortcuts</div><div class="small" style="margin-top:10px;line-height:2.1"><div><span class="kbd">Space</span> &nbsp;start / pause the timer</div><div><span class="kbd">Enter</span> &nbsp;submit the focused input</div><div><span class="kbd">Esc</span> &nbsp;cancel a planner or brain-dump composer</div></div>`)
+  +panel(`<div class="section-title">🗑 Danger zone</div><div class="desc" style="margin:6px 0 10px">Erase everything — habits, goals, journal, plans, links, XP, and sessions — on this device. This can't be undone.</div><button class="btn coral" data-action="clearAllData">Clear all data</button>`);
+}
+function shortTitle(text){const words=String(text).trim().split(/\s+/);return words.length<=8?String(text).trim():words.slice(0,8).join(' ')+'…'}
+function bind(){
+  const view=document.getElementById('view');
+  if(!view) return;
+  if(!view.dataset.bound){
+    view.dataset.bound='1';
+    view.addEventListener('click',e=>{
+      const el=e.target.closest('[data-action]');
+      if(el && view.contains(el)) onAction({currentTarget:el, target:e.target});
+    });
+    view.addEventListener('input',e=>{
+      if(e.target && e.target.id==='journalText') autosaveJournal(e.target.value);
+    });
+    view.addEventListener('change',e=>{
+      if(e.target && e.target.id==='timerMinutes'){
+        const v=Math.max(1,Math.min(180,Number(e.target.value)||1));
+        timer.remaining=v*60; timer.total=timer.remaining; render();
+      } else if(e.target && e.target.id==='pomFocus'){
+        timer.work=Math.max(1,Math.min(120,Number(e.target.value)||1));
+        if(!timer.running&&timer.phase==='work'){ timer.remaining=timer.work*60; timer.total=timer.remaining; } render();
+      } else if(e.target && e.target.id==='pomBreak'){
+        timer.break=Math.max(1,Math.min(60,Number(e.target.value)||1));
+        if(!timer.running&&timer.phase==='break'){ timer.remaining=timer.break*60; timer.total=timer.remaining; } render();
+      } else if(e.target && e.target.id==='importFileInput'){
+        const file=e.target.files && e.target.files[0];
+        if(!file) return;
+        const reader=new FileReader();
+        reader.onload=()=>{
+          try{
+            const imported=JSON.parse(reader.result);
+            if(confirm('Import this backup? This will replace all data currently saved on this device.')){
+              data={...structuredClone(defaults),...imported};
+              save(); render();
+            }
+          }catch(err){ alert('That file could not be read as a valid backup.'); }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+  setupDrag(view);
+}
+function autosaveJournal(raw){
+  const k=today(), pi=doy()%prompts.length, v=String(raw||'').trim();
+  const i=data.journalEntries.findIndex(e=>e.date===k&&e.promptIndex===pi);
+  if(i>=0){ if(v) data.journalEntries[i].text=v; else data.journalEntries.splice(i,1); }
+  else if(v) data.journalEntries.push({date:k,text:v,prompt:prompts[pi],promptIndex:pi});
+  save();
+}
+
+function onAction(e){const a=e.currentTarget.dataset.action,id=e.currentTarget.dataset.id; if(a.startsWith('timer'))return timerAction(a,e.currentTarget.dataset.mode); if(a==='addPlan'){const x=document.getElementById('planInput')?.value.trim();if(x)setData(()=>{const k=today();(data.plans[k]??=[]).push({id:uid(),text:x,done:false})})}else if(a==='togglePlan')setData(()=>{const x=data.plans[today()]||[];const i=x.findIndex(y=>y.id===id);if(i>=0)x[i].done=!x[i].done});else if(a==='removePlan'){const k=today(),arr=data.plans[k]||[],idx=arr.findIndex(x=>x.id===id);if(idx>=0){const removed=arr.splice(idx,1)[0];save();render();showUndoToast('Plan removed',()=>{(data.plans[k]??=[]).splice(Math.min(idx,data.plans[k].length),0,removed);save();render();})}}else if(a==='addSidequest')setData(()=>{const k=today();const q=sidequests[sidequestIndex%sidequests.length];(data.plans[k]??=[]).push({id:uid(),text:q,done:false,tag:'sidequest'})});else if(a==='rerollSidequest'){let n=sidequestIndex;while(n===sidequestIndex)n=Math.floor(Math.random()*sidequests.length);sidequestIndex=n;render()}else if(a==='goalSub'){window.goalSub=e.currentTarget.dataset.sub;render()}else if(a==='toggleHabit')setData(()=>{const h=data.habits.find(x=>x.id===id);if(h){const k=today();if(h.history[k])delete h.history[k];else h.history[k]=true}});else if(a==='removeHabit'){const idx=data.habits.findIndex(x=>x.id===id);if(idx>=0){const removed=data.habits.splice(idx,1)[0];save();render();showUndoToast('Habit removed',()=>{data.habits.splice(Math.min(idx,data.habits.length),0,removed);save();render();})}}else if(a==='addHabit'){const x=document.getElementById('habitInput')?.value.trim();if(x)setData(()=>data.habits.push({id:uid(),name:x,history:{}}))}else if(a==='toggleSub')setData(()=>{const g=data.goals.find(x=>x.id===e.currentTarget.dataset.gid),s=g?.subtasks.find(x=>x.id===id);if(!s)return;s.done=!s.done;const complete=g.subtasks.length>0&&g.subtasks.every(x=>x.done);if(complete&&!g.rewardClaimed){const reward=goalXp(g);addXp(reward);g.rewardClaimed=true;setTimeout(()=>alert(`Goal complete! +${reward} XP`),0)} });else if(a==='removeSub'){const gid=e.currentTarget.dataset.gid,g=data.goals.find(x=>x.id===gid);if(g){const idx=g.subtasks.findIndex(x=>x.id===id);if(idx>=0){const removed=g.subtasks.splice(idx,1)[0];save();render();showUndoToast('Step removed',()=>{g.subtasks.splice(Math.min(idx,g.subtasks.length),0,removed);save();render();})}}}else if(a==='addSub'){const gid=e.currentTarget.parentElement.querySelector('input[type=hidden]')?.value;const x=document.getElementById('sub-'+gid)?.value.trim();if(x)setData(()=>{const g=data.goals.find(y=>y.id===gid);if(g)g.subtasks.push({id:uid(),text:x,done:false})})}else if(a==='removeGoal'){const idx=data.goals.findIndex(x=>x.id===id);if(idx>=0){const removed=data.goals.splice(idx,1)[0];save();render();showUndoToast('Goal removed',()=>{data.goals.splice(Math.min(idx,data.goals.length),0,removed);save();render();})}}else if(a==='addGoal'){const x=document.getElementById('goalInput')?.value.trim();if(x)setData(()=>data.goals.push({id:uid(),title:x,subtasks:[],rewardClaimed:false}))}else if(a==='addDump'){const x=document.getElementById('dumpText')?.value.trim();if(x)setData(()=>data.brainDump.unshift({id:uid(),text:x,createdAt:Date.now()}))}else if(a==='saveJournal'){autosaveJournal(document.getElementById('journalText')?.value||'');render();}else if(a==='calendarPrev'){calendarCursor.setMonth(calendarCursor.getMonth()-1);calendarComposeDate=null;render()}else if(a==='calendarNext'){calendarCursor.setMonth(calendarCursor.getMonth()+1);calendarComposeDate=null;render()}else if(a==='calendarToday'){calendarCursor=new Date();calendarCursor.setDate(1);calendarComposeDate=null;render()}else if(a==='calendarAdd'){calendarComposeDate=e.currentTarget.dataset.date;render();setTimeout(()=>document.getElementById('calendarPlanInput')?.focus(),0)}else if(a==='calendarCancel'){calendarComposeDate=null;render()}else if(a==='calendarSave'){const text=document.getElementById('calendarPlanInput')?.value.trim();if(text&&calendarComposeDate){const k=calendarComposeDate;setData(()=>{(data.plans[k]??=[]).push({id:uid(),text,done:false,tag:'calendar'});calendarComposeDate=null})}}else if(a==='removeCalendarPlan'){const date=e.currentTarget.dataset.date,arr=data.plans[date]||[],idx=arr.findIndex(x=>x.id===id);if(idx>=0){const removed=arr.splice(idx,1)[0];save();render();showUndoToast('Plan removed',()=>{(data.plans[date]??=[]).splice(Math.min(idx,data.plans[date].length),0,removed);save();render();})}}else if(a==='removeJournalEntry'){const date=e.currentTarget.dataset.date,pi=Number(e.currentTarget.dataset.pi);const idx=data.journalEntries.findIndex(x=>x.date===date&&x.promptIndex===pi);if(idx>=0){const removed=data.journalEntries.splice(idx,1)[0];save();render();showUndoToast('Journal entry deleted',()=>{data.journalEntries.push(removed);save();render();})}}else if(a==='dumpToGoal'){dumpGoalId=id;render();setTimeout(()=>{const el=document.getElementById('dumpGoalTitle');el?.focus();el?.select()},0)}else if(a==='confirmDumpGoal'){const dump=data.brainDump.find(x=>x.id===dumpGoalId);const title=document.getElementById('dumpGoalTitle')?.value.trim();if(dump&&title){setData(()=>{data.goals.push({id:uid(),title,subtasks:[{id:uid(),text:dump.text,done:false}],rewardClaimed:false});data.brainDump=data.brainDump.filter(x=>x.id!==dumpGoalId);dumpGoalId=null;tab='goals';window.goalSub='goals'})}}else if(a==='cancelDumpGoal'){dumpGoalId=null;render()}else if(a==='removeDump'){const idx=data.brainDump.findIndex(x=>x.id===id);if(idx>=0){const removed=data.brainDump.splice(idx,1)[0];save();render();showUndoToast('Removed from pile',()=>{data.brainDump.splice(Math.min(idx,data.brainDump.length),0,removed);save();render();})}}else if(a==='removeLink'){const idx=data.links.findIndex(x=>x.id===id);if(idx>=0){const removed=data.links.splice(idx,1)[0];save();render();showUndoToast('Link removed',()=>{data.links.splice(Math.min(idx,data.links.length),0,removed);save();render();})}}else if(a==='addLink'){const n=document.getElementById('linkName')?.value.trim(),u=document.getElementById('linkUrl')?.value.trim(),c=document.getElementById('linkCat')?.value.trim();if(u)setData(()=>data.links.push({id:uid(),name:n||u.replace(/^https?:\/\//,'').split('/')[0],url:/^https?:\/\//i.test(u)?u:'https://'+u,category:c||'Other'}))}else if(a==='undoDelete'){if(undoRestore){const fn=undoRestore;undoRestore=null;clearTimeout(undoTimer);document.getElementById('toast')?.classList.remove('show');fn();}}else if(a==='toggleDark'){const isDark=document.documentElement.classList.toggle('dark');localStorage.setItem('personal-dashboard-theme',isDark?'dark':'light');render();}else if(a==='exportData'){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`dashboard-backup-${today()}.json`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);}else if(a==='importData'){document.getElementById('importFileInput')?.click();}else if(a==='clearAllData'){if(confirm('This permanently erases all your data on this device — habits, goals, journal entries, plans, links, XP, and sessions. This cannot be undone. Continue?')){localStorage.removeItem(KEY);data=structuredClone(defaults);tab='today';save();render();}}else if(a==='syncCreate'){syncCreateBin();}else if(a==='syncLinkExisting'){syncLinkExisting();}else if(a==='syncPush'){syncPush();}else if(a==='syncPull'){if(confirm('Pull the latest cloud save? This will replace the data on this device.'))syncPull();}else if(a==='syncUnlink'){if(confirm('Unlink cloud sync on this device? Your cloud bin will not be deleted.'))syncUnlink();}}
+function tickUpdate(){
+  updateTabTitle();
+  const ringEl=document.querySelector('.timer-ring');
+  if(!ringEl) return;
+  const display=timer.mode==='stopwatch'?timer.stopwatch:timer.remaining;
+  const mm=String(Math.floor(display/60)).padStart(2,'0'),ss=String(display%60).padStart(2,'0');
+  const textEl=ringEl.querySelector('.timer');
+  if(textEl) textEl.textContent=mm+':'+ss;
+  const total=Math.max(1,timer.total||600);
+  const pct=timer.mode==='stopwatch'?0:Math.min(100,Math.max(0,Math.round(((total-timer.remaining)/total)*100)));
+  ringEl.style.setProperty('--pct',pct);
+}
+function timerAction(a,mode){
+  if(a==='timerMode'){
+    clearInterval(timer.interval);timer.running=false;timer.finished=false;timer.mode=mode;
+    if(mode==='timer'){timer.remaining=600;timer.total=600}
+    if(mode==='pomodoro'){timer.phase='work';timer.remaining=timer.work*60;timer.total=timer.remaining}
+    if(mode==='stopwatch'){timer.stopwatch=0}
+    render()
+  }else if(a==='timerToggle'){
+    timer.finished=false;
+    timer.running=!timer.running;clearInterval(timer.interval);
+    if(timer.running){
+      timer.interval=setInterval(()=>{
+        if(timer.mode==='stopwatch'){
+          timer.stopwatch++;
+          tickUpdate();
+        }else{
+          timer.remaining=Math.max(0,timer.remaining-1);
+          if(timer.remaining===0){
+            if(timer.mode==='timer'){
+              timer.running=false;clearInterval(timer.interval);
+              playChime('finish');timer.finished=true;
+              data.sessions=data.sessions||[];
+              data.sessions.push({date:today(),minutes:Math.round(timer.total/60),type:'timer',ts:Date.now()});
+              save();
+              render();
+              setTimeout(()=>{timer.finished=false;render()},5000)
+            }else{
+              playChime('phase');
+              if(timer.phase==='work'){
+                data.sessions=data.sessions||[];
+                data.sessions.push({date:today(),minutes:timer.work,type:'pomodoro',ts:Date.now()});
+                save();
+              }
+              timer.phase=timer.phase==='work'?'break':'work';
+              timer.remaining=(timer.phase==='work'?timer.work:timer.break)*60;
+              timer.total=timer.remaining;
+              render();
+            }
+          }else{
+            tickUpdate();
+          }
+        }
+      },1000)
+    }
+    render()
+  }else if(a==='timerReset'){
+    clearInterval(timer.interval);timer.running=false;timer.stopwatch=0;timer.finished=false;
+    timer.remaining=timer.mode==='pomodoro'?timer.work*60:600;
+    timer.total=timer.remaining;
+    render()
+  }else if(a==='timerToggleSound'){
+    soundOn=!soundOn;localStorage.setItem('personal-dashboard-sound',soundOn?'on':'off');
+    if(soundOn)playChime('phase');
+    render()
+  }
+}
+applyTheme();
+document.getElementById('toast')?.addEventListener('click',e=>{
+  const el=e.target.closest('[data-action="undoDelete"]');
+  if(el) onAction({currentTarget:el,target:el});
+});
+document.addEventListener('keydown',e=>{
+  const tag=(document.activeElement&&document.activeElement.tagName||'').toLowerCase();
+  const isTyping=tag==='input'||tag==='textarea';
+  if(e.code==='Space'&&!isTyping){
+    e.preventDefault();
+    timerAction('timerToggle');
+  }else if(e.key==='Enter'&&tag==='input'){
+    const fieldId=document.activeElement.id;
+    const map={planInput:'addPlan',habitInput:'addHabit',goalInput:'addGoal',linkName:'addLink',linkUrl:'addLink',linkCat:'addLink',calendarPlanInput:'calendarSave',dumpGoalTitle:'confirmDumpGoal'};
+    if(map[fieldId]){ e.preventDefault(); onAction({currentTarget:{dataset:{action:map[fieldId]}}}); }
+  }else if(e.key==='Escape'){
+    if(calendarComposeDate){ calendarComposeDate=null; render(); }
+    if(dumpGoalId){ dumpGoalId=null; render(); }
+  }
+});
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));render();setInterval(updateHeader,15000);
+</script>
+</body></html>
